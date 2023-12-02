@@ -32,7 +32,8 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer in,
                           size_t size) {
   hw.ProcessAllControls();
   dco.freq = hztofreq(20.0 * powf(2.0, 11.0 * hw.knob2.Process()));
-  dcw.M = 0.1 + 1.9 * hw.knob1.Process();
+  float minM = 0.45;
+  dcw.M = minM + (1.0 - minM) * hw.knob1.Process();
   for (int i = 0; i < (int)size; i += 2) {
     dco.phase += dco.freq;
     while (dco.phase > 2.0)
