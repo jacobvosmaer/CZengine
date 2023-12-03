@@ -1,18 +1,32 @@
 #include "daisy_pod.h"
 #include <string.h>
 
+#define nelem(x) (sizeof(x) / sizeof(*(x)))
+
 #undef assert
 #define assert(x)                                                              \
   if (!(x))                                                                    \
   asm("bkpt 255")
 
-#define seg(x, x0, y0, x1, y1, z)                                              \
-  ((x) >= x0 && (x) < x1) ? y0 + ((x)-x0) * (y1 - y0) / (x1 - x0) : (z)
-
 float pi = 3.141592653;
 
 using namespace daisy;
 DaisyPod hw;
+
+struct point {
+  float x, y;
+};
+
+float pwlin(float x, struct point *curve, int np) {
+  if (np <= 1 || (x < curve->x))
+    return x;
+  np--;
+  for (struct point *prev = curve++; np--; curve++, prev++)
+    if (x < curve->x)
+      return prev->y +
+             (x - prev->x) * (curve->y - prev->y) / (curve->x - prev->x);
+  return x;
+}
 
 struct {
   float phase;
@@ -25,16 +39,17 @@ struct {
 } dcw;
 
 float dcw_process(float phase) {
+  struct point sat[] = {{0, 0}, {dcw.M, 0.5}, {1, 1}},
+               squ[] = {{0, 0},
+                        {0.25f - 0.5f * dcw.M, 0},
+                        {0.25f + 0.5f * dcw.M, 0.5f},
+                        {0.75f - 0.5f * dcw.M, 0.5f},
+                        {0.75f + 0.5f * dcw.M, 1},
+                        {1, 1}};
   if (dcw.sat)
-    phase = seg(phase, 0.0, 0.0, dcw.M, 0.5,
-                seg(phase, dcw.M, 0.5, 1.0, 1.0, phase));
+    phase = pwlin(phase, sat, nelem(sat));
   else if (dcw.squ)
-    phase = seg(
-        phase, 0.0, 0.0, 0.25 - 0.5 * dcw.M, 0.0,
-        seg(phase, 0.25 - 0.5 * dcw.M, 0.0, 0.25 + 0.5 * dcw.M, 0.5,
-            seg(phase, 0.25 + 0.5 * dcw.M, 0.5, 0.75 - 0.5 * dcw.M, 0.5,
-                seg(phase, 0.75 - 0.5 * dcw.M, 0.5, 0.75 + 0.5 * dcw.M, 1.0,
-                    seg(phase, 0.75 + 0.5 * dcw.M, 1.0, 1.0, 1.0, phase)))));
+    phase = pwlin(phase, squ, nelem(squ));
   return cosf(2.0 * pi * phase);
 }
 
