@@ -65,6 +65,7 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer in,
   dco.freq = hztofreq(20.0 * powf(2.0, 11.0 * hw.knob2.Process()));
   float minM = 0.01;
   dcw.M = minM + (0.5 - minM) * hw.knob1.Process();
+
   for (int i = 0; i < (int)size; i += 2) {
     dco.phase += dco.freq;
     while (dco.phase >= 1.0)
