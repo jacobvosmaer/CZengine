@@ -20,12 +20,21 @@ struct {
 } dco;
 
 struct {
+  int sat, squ;
   float M;
 } dcw;
 
 float dcw_process(float phase) {
-  phase =
-      seg(phase, 0.0, 0.0, dcw.M, 0.5, seg(phase, dcw.M, 0.5, 1.0, 1.0, phase));
+  if (dcw.sat)
+    phase = seg(phase, 0.0, 0.0, dcw.M, 0.5,
+                seg(phase, dcw.M, 0.5, 1.0, 1.0, phase));
+  else if (dcw.squ)
+    phase = seg(
+        phase, 0.0, 0.0, 0.25 - 0.5 * dcw.M, 0.0,
+        seg(phase, 0.25 - 0.5 * dcw.M, 0.0, 0.25 + 0.5 * dcw.M, 0.5,
+            seg(phase, 0.25 + 0.5 * dcw.M, 0.5, 0.75 - 0.5 * dcw.M, 0.5,
+                seg(phase, 0.75 - 0.5 * dcw.M, 0.5, 0.75 + 0.5 * dcw.M, 1.0,
+                    seg(phase, 0.75 + 0.5 * dcw.M, 1.0, 1.0, 1.0, phase)))));
   return cosf(2.0 * pi * phase);
 }
 
@@ -35,6 +44,10 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer in,
                           AudioHandle::InterleavingOutputBuffer out,
                           size_t size) {
   hw.ProcessAllControls();
+  if (hw.button1.RisingEdge()) {
+    dcw.sat = !dcw.sat;
+    dcw.squ = !dcw.squ;
+  }
   dco.freq = hztofreq(20.0 * powf(2.0, 11.0 * hw.knob2.Process()));
   float minM = 0.01;
   dcw.M = minM + (0.5 - minM) * hw.knob1.Process();
@@ -50,6 +63,8 @@ int main(void) {
   hw.Init();
   hw.SetAudioSampleRate(SaiHandle::Config::SampleRate::SAI_96KHZ);
   hw.StartAdc();
+  dcw.sat = 1;
+  dcw.squ = 0;
   hw.StartAudio(AudioCallback);
   while (1)
     ;
