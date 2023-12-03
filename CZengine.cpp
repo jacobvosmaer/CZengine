@@ -18,13 +18,10 @@ struct point {
 };
 
 float pwlin(float x, struct point *curve, int np) {
-  if (np <= 1 || (x < curve->x))
-    return x;
-  np--;
-  for (struct point *prev = curve++; np--; curve++, prev++)
-    if (x < curve->x)
-      return prev->y +
-             (x - prev->x) * (curve->y - prev->y) / (curve->x - prev->x);
+  for (; np-- >= 2; curve++)
+    if (x < curve[1].x)
+      return curve[0].y + (x - curve[0].x) * (curve[1].y - curve[0].y) /
+                              (curve[1].x - curve[0].x);
   return x;
 }
 
