@@ -13,25 +13,38 @@ float pi = 3.141592653;
 using namespace daisy;
 DaisyPod hw;
 
-struct point {
-  float x, y;
-};
+struct curve {
+  float x, m, y;
+} sawtooth[] = {{0, 0, 0}, {0, 1, 0.5}, {1, 0, 1}},
+  square[] = {{0, 0, 0},           {0.25f, -0.5f, 0},
+              {0.25f, 0.5f, 0.5f}, {0.75f, -0.5f, 0.5f},
+              {0.75f, 0.5f, 1},    {1, 0, 1}},
+  impulse[] = {{0, 0, 0}, {0.5f, -1, 0}, {0.5f, 1, 1}, {1, 0, 1}},
+  null[] = {{0, 0}}, sineimpulse[] = {{0, 00}, {0, 1, 1}, {1, 0, 2}},
+  sawsquare[] = {{0, 0, 0}, {0.5, 0, 0.5}, {0.5f, 1, 1}, {1, 0, 1}};
 
 struct transform {
-  struct point *curve;
-  int np;
-};
+  struct curve *curve;
+  int n;
+} transform[] = {
+    {sawtooth, nelem(sawtooth)},       {square, nelem(square)},
+    {impulse, nelem(impulse)},         {null, nelem(null)},
+    {sineimpulse, nelem(sineimpulse)}, {sawsquare, nelem(sawsquare)}};
 
-/* pwlin applies piece-wise the linear function specified by curve to x */
-float pwlin(float x, struct transform t) {
-  assert(t.np > 0);
-  if (x < t.curve[0].x)
-    return t.curve[0].y;
-  for (; t.np-- >= 2; t.curve++)
-    if (x < t.curve[1].x)
-      return t.curve[0].y + (x - t.curve[0].x) * (t.curve[1].y - t.curve[0].y) /
-                                (t.curve[1].x - t.curve[0].x);
-  return t.curve[0].y;
+float pwlin(float x, float m, struct transform t) {
+  struct curve *c = t.curve;
+  float x1, x0;
+
+  assert(t.n > 0);
+  x0 = c[0].x + c[0].m * m;
+  if (x < x0)
+    return c[0].y;
+  for (; t.n-- >= 2; c++, x0 = x1) {
+    x1 = c[1].x + c[1].m * m;
+    if (x < x1)
+      return c[0].y + (x - x0) * (c[1].y - c[0].y) / (x1 - x0);
+  }
+  return c[0].y;
 }
 
 struct {
@@ -45,26 +58,8 @@ struct {
 } dcw;
 
 float dcw_process(float phase) {
-  struct point sawtooth[] = {{0, 0}, {dcw.M, 0.5}, {1, 1}},
-               square[] = {{0, 0},
-                           {0.25f - 0.5f * dcw.M, 0},
-                           {0.25f + 0.5f * dcw.M, 0.5f},
-                           {0.75f - 0.5f * dcw.M, 0.5f},
-                           {0.75f + 0.5f * dcw.M, 1},
-                           {1, 1}},
-               impulse[] = {{0, 0},
-                            {0.5f - dcw.M, 0},
-                            {0.5f + dcw.M, 1},
-                            {1, 1}},
-               null[] = {{0, 0}}, sineimpulse[] = {{0, 0}, {dcw.M, 1}, {1, 2}},
-               sawsquare[] = {{0, 0}, {0.5, 0.5}, {0.5f + dcw.M, 1}, {1, 1}};
-  struct transform transform[] = {
-      {sawtooth, nelem(sawtooth)},       {square, nelem(square)},
-      {impulse, nelem(impulse)},         {null, nelem(null)},
-      {sineimpulse, nelem(sineimpulse)}, {sawsquare, nelem(sawsquare)}};
-
   assert(dcw.wav < nelem(transform));
-  return cosf(2.0 * pi * pwlin(phase, transform[dcw.wav]));
+  return cosf(2.0 * pi * pwlin(phase, dcw.M, transform[dcw.wav]));
 }
 
 float hztofreq(float hz) { return hz / hw.AudioSampleRate(); }
