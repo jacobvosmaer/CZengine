@@ -17,14 +17,16 @@ struct point {
   float x, y;
 };
 
+/* pwline applies piece-wise the linear function specified by curve to x */
 float pwlin(float x, struct point *curve, int np) {
-  if (np <= 0 || x < curve[0].x)
-    return x;
+  assert(np > 0);
+  if (x < curve[0].x)
+    return curve[0].y;
   for (; np-- >= 2; curve++)
     if (x < curve[1].x)
       return curve[0].y + (x - curve[0].x) * (curve[1].y - curve[0].y) /
                               (curve[1].x - curve[0].x);
-  return x;
+  return curve[0].y;
 }
 
 struct {
