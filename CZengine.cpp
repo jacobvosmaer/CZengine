@@ -54,7 +54,7 @@ float dcw_process(float phase) {
                         {0.75f - 0.5f * dcw.M, 0.5f},
                         {0.75f + 0.5f * dcw.M, 1},
                         {1, 1}},
-               sip[] = {{0, 0}, {2.f * dcw.M, 1}, {1, 1}};
+               sip[] = {{0, 0}, {0.5f - dcw.M, 0}, {0.5f + dcw.M, 1}, {1, 1}};
   struct transform transform[] = {
       {sat, nelem(sat)}, {squ, nelem(squ)}, {sip, nelem(sip)}};
 
