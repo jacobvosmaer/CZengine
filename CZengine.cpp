@@ -17,16 +17,21 @@ struct point {
   float x, y;
 };
 
-/* pwline applies piece-wise the linear function specified by curve to x */
-float pwlin(float x, struct point *curve, int np) {
-  assert(np > 0);
-  if (x < curve[0].x)
-    return curve[0].y;
-  for (; np-- >= 2; curve++)
-    if (x < curve[1].x)
-      return curve[0].y + (x - curve[0].x) * (curve[1].y - curve[0].y) /
-                              (curve[1].x - curve[0].x);
-  return curve[0].y;
+struct transform {
+  struct point *curve;
+  int np;
+};
+
+/* pwlin applies piece-wise the linear function specified by curve to x */
+float pwlin(float x, struct transform t) {
+  assert(t.np > 0);
+  if (x < t.curve[0].x)
+    return t.curve[0].y;
+  for (; t.np-- >= 2; t.curve++)
+    if (x < t.curve[1].x)
+      return t.curve[0].y + (x - t.curve[0].x) * (t.curve[1].y - t.curve[0].y) /
+                                (t.curve[1].x - t.curve[0].x);
+  return t.curve[0].y;
 }
 
 struct {
@@ -35,6 +40,7 @@ struct {
 } dco;
 
 enum { SAT = 0, SQU = 1, SIP = 2 };
+
 struct {
   unsigned wav;
   float M;
@@ -49,15 +55,11 @@ float dcw_process(float phase) {
                         {0.75f + 0.5f * dcw.M, 1},
                         {1, 1}},
                sip[] = {{0, 0}, {2.f * dcw.M, 1}, {1, 1}};
-  struct transform {
-    struct point *curve;
-    int np;
-  } * t,
-      transform[] = {{sat, nelem(sat)}, {squ, nelem(squ)}, {sip, nelem(sip)}};
+  struct transform transform[] = {
+      {sat, nelem(sat)}, {squ, nelem(squ)}, {sip, nelem(sip)}};
 
   assert(dcw.wav < nelem(transform));
-  t = transform + dcw.wav;
-  return cosf(2.0 * pi * pwlin(phase, t->curve, t->np));
+  return cosf(2.0 * pi * pwlin(phase, transform[dcw.wav]));
 }
 
 float hztofreq(float hz) { return hz / hw.AudioSampleRate(); }
