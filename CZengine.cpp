@@ -68,7 +68,7 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer in,
                           size_t size) {
   hw.ProcessAllControls();
   if (hw.button1.RisingEdge())
-    dcw.wav = (dcw.wav + 1) % 6;
+    dcw.wav = (dcw.wav + 1) % nelem(transform);
   dco.freq = hztofreq(20.0 * powf(2.0, 11.0 * hw.knob2.Process()));
   float minM = 0.01;
   dcw.M = minM + (0.5 - minM) * hw.knob1.Process();
