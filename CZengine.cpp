@@ -56,12 +56,12 @@ float dcw_process(float phase) {
                             {0.5f - dcw.M, 0},
                             {0.5f + dcw.M, 1},
                             {1, 1}},
-               null[] = {{0, 0}}, sineimpulse[] = {{0, 0}, {dcw.M, 1}, {1, 2}};
-  struct transform transform[] = {{sawtooth, nelem(sawtooth)},
-                                  {square, nelem(square)},
-                                  {impulse, nelem(impulse)},
-                                  {null, nelem(null)},
-                                  {sineimpulse, nelem(sineimpulse)}};
+               null[] = {{0, 0}}, sineimpulse[] = {{0, 0}, {dcw.M, 1}, {1, 2}},
+               sawsquare[] = {{0, 0}, {0.5, 0.5}, {0.5f + dcw.M, 1}, {1, 1}};
+  struct transform transform[] = {
+      {sawtooth, nelem(sawtooth)},       {square, nelem(square)},
+      {impulse, nelem(impulse)},         {null, nelem(null)},
+      {sineimpulse, nelem(sineimpulse)}, {sawsquare, nelem(sawsquare)}};
 
   assert(dcw.wav < nelem(transform));
   return cosf(2.0 * pi * pwlin(phase, transform[dcw.wav]));
@@ -74,10 +74,7 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer in,
                           size_t size) {
   hw.ProcessAllControls();
   if (hw.button1.RisingEdge())
-    dcw.wav--;
-  else if (hw.button2.RisingEdge())
-    dcw.wav++;
-  dcw.wav %= 5;
+    dcw.wav = (dcw.wav + 1) % 6;
   dco.freq = hztofreq(20.0 * powf(2.0, 11.0 * hw.knob2.Process()));
   float minM = 0.01;
   dcw.M = minM + (0.5 - minM) * hw.knob1.Process();
