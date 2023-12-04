@@ -1,5 +1,4 @@
 #include "daisy_pod.h"
-#include <string.h>
 
 #define nelem(x) (sizeof(x) / sizeof(*(x)))
 
