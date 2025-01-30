@@ -37,6 +37,10 @@ struct {
   float M;
 } dcw;
 
+struct {
+  float amp;
+} dca;
+
 float dcw_process(float phase) {
   assert(dcw.wav < nelem(transform));
   return cosf(2.0 * pi * pwlin(phase, dcw.M, transform[dcw.wav]));
@@ -44,21 +48,32 @@ float dcw_process(float phase) {
 
 float hztofreq(float hz) { return hz / hw.AudioSampleRate(); }
 
+int vzmode;
+
 static void AudioCallback(AudioHandle::InterleavingInputBuffer in,
                           AudioHandle::InterleavingOutputBuffer out,
                           size_t size) {
+  float knob2;
   hw.ProcessAllControls();
+  knob2 = hw.knob2.Process();
   if (hw.button1.RisingEdge())
-    dcw.wav = (dcw.wav + 1) % nelem(transform);
-  dco.freq = hztofreq(20.0 * powf(2.0, 11.0 * hw.knob2.Process()));
+    vzmode ^= 1;
+  if (hw.button2.Pressed())
+    dco.freq = hztofreq(20.0 * powf(2.0, 11.0 * knob2));
+  else
+    dca.amp = knob2;
   float minM = 0.01;
   dcw.M = minM + (0.5 - minM) * hw.knob1.Process();
 
   for (int i = 0; i < (int)size; i += 2) {
+    float sample;
     dco.phase += dco.freq;
     while (dco.phase >= 1.0)
       dco.phase -= 1.0;
-    out[i] = out[i + 1] = dcw_process(dco.phase);
+    sample = dcw_process(dco.phase);
+    if (vzmode)
+      sample = sinf(2 * pi * dca.amp * sample);
+    out[i] = out[i + 1] = sample;
   }
 }
 
