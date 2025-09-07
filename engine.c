@@ -1,5 +1,4 @@
 #include "engine.h"
-static float pi = 3.141592653;
 static float phasewrap(float f) {
   if (f > 1.0)
     f -= (float)(int)f;

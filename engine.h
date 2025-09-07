@@ -7,3 +7,4 @@ struct transform {
   int n;
 };
 float dcwshape(float phase, struct transform t, float shape);
+#define pi 3.141592653

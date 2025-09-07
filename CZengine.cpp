@@ -46,7 +46,8 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer in,
 
   for (int i = 0; i < (int)size; i += 2)
     out[i] = out[i + 1] =
-        dcwshape(phasorupdate(&dco.phase, dco.freq), transform[dcw.wav], dcw.M);
+        dcwshape(0.25 * cosf(2.0 * pi * phasorupdate(&dco.phase, dco.freq)),
+                 transform[dcw.wav], dcw.M);
 }
 
 int main(void) {
