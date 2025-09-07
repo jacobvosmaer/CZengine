@@ -1,3 +1,5 @@
 env.rc
 env.sh
 build/
+*.o
+*.d

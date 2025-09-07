@@ -2,6 +2,7 @@ TARGET = CZengine
 
 # Sources
 CPP_SOURCES = CZengine.cpp
+C_SOURCES = engine.c
 
 # Library Locations
 LIBDAISY_DIR = ./libDaisy
@@ -12,3 +13,5 @@ include $(SYSTEM_FILES_DIR)/Makefile
 
 format: *.cpp
 	clang-format -i *.cpp
+
+engine.o: engine.h
