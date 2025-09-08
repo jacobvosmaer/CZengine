@@ -19,7 +19,7 @@ struct transform transform[] = {
     {impulse, nelem(impulse)},         {null, nelem(null)},
     {sineimpulse, nelem(sineimpulse)}, {sawsquare, nelem(sawsquare)}};
 
-float shapes[] = {0.5, 0.6, 0.7, 0.8, 0.9, 0.99};
+float shapes[] = {0.5, 0.4, 0.3, 0.2, 0.1, 0.01};
 
 using namespace daisy;
 DaisyPod hw;
@@ -46,7 +46,7 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer in,
   dco.freq = hztofreq(20.0 * powf(2.0, 11.0 * hw.knob2.Process()));
 
   for (int i = 0; i < (int)size; i += 2) {
-    float M1 = 4.0 * hw.knob1.Process() *
+    float M1 = 2.0 * hw.knob1.Process() *
                dcwshape(phasorupdate(&dco.phase, dco.freq), transform[0],
                         shapes[dcw.shape1]),
           M2 = dcwshape(M1, transform[0], shapes[dcw.shape2]);
