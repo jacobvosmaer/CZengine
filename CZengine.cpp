@@ -19,6 +19,8 @@ struct transform transform[] = {
     {impulse, nelem(impulse)},         {null, nelem(null)},
     {sineimpulse, nelem(sineimpulse)}, {sawsquare, nelem(sawsquare)}};
 
+float shapes[] = {0.5, 0.6, 0.7, 0.8, 0.9, 0.99};
+
 using namespace daisy;
 DaisyPod hw;
 
@@ -28,8 +30,7 @@ struct {
 } dco;
 
 struct {
-  unsigned wav;
-  float M;
+  int shape1, shape2;
 } dcw;
 
 float hztofreq(float hz) { return hz / hw.AudioSampleRate(); }
@@ -39,15 +40,19 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer in,
                           size_t size) {
   hw.ProcessAllControls();
   if (hw.button1.RisingEdge())
-    dcw.wav = (dcw.wav + 1) % nelem(transform);
+    dcw.shape1 = (dcw.shape1 + 1) % nelem(shapes);
+  if (hw.button2.RisingEdge())
+    dcw.shape2 = (dcw.shape2 + 1) % nelem(shapes);
   dco.freq = hztofreq(20.0 * powf(2.0, 11.0 * hw.knob2.Process()));
-  float minM = 0.01;
-  dcw.M = minM + (0.5 - minM) * hw.knob1.Process();
 
-  for (int i = 0; i < (int)size; i += 2)
-    out[i] = out[i + 1] =
-        dcwshape(0.25 * cosf(2.0 * pi * phasorupdate(&dco.phase, dco.freq)),
-                 transform[dcw.wav], dcw.M);
+  for (int i = 0; i < (int)size; i += 2) {
+    float M1 = 4.0 * hw.knob1.Process() *
+               dcwshape(phasorupdate(&dco.phase, dco.freq), transform[0],
+                        shapes[dcw.shape1]),
+          M2 = dcwshape(M1, transform[0], shapes[dcw.shape2]);
+
+    out[i] = out[i + 1] = M2;
+  }
 }
 
 int main(void) {
