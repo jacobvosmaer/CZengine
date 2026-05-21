@@ -3,3 +3,6 @@ env.sh
 build/
 *.o
 *.d
+*.dat
+*.pdf
+table

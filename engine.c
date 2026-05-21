@@ -1,4 +1,5 @@
 #include "engine.h"
+#include <math.h>
 static float phasewrap(float f) {
   if (f > 1.0)
     f -= (float)(int)f;
@@ -10,7 +11,7 @@ float phasorupdate(float *phasor, float frequency) {
   *phasor = phasewrap(*phasor + frequency);
   return *phasor;
 }
-static float pwlin(float x, float m, struct transform t) {
+float pwlin(float x, float m, struct transform t) {
   struct curve *c = t.curve;
   float x1, x0;
   x0 = c[0].x + c[0].m * m;

@@ -15,3 +15,6 @@ format: *.cpp
 	clang-format -i *.cpp
 
 engine.o: engine.h
+
+table: engine.c table.c transform.h
+	cc -o $@ engine.c table.c
